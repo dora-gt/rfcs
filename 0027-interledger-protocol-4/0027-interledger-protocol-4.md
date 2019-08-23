@@ -1,11 +1,11 @@
 ---
 title: Interledger Protocol V4 (ILPv4)
-draft: 5
+draft: 9
 ---
 
 # Interledger Protocol V4
 
-Interledger is a protocol for sending packets of money across different payment networks or ledgers. ILPv4 is a simplification of previous versions of the protocol that is optimized for routing large volumes of low-value packets, also known as "penny switching". ILPv4 can be integrated with any type of ledger, including those not built for interoperability, and it is designed be used with a variety of higher-level protocols that implement features ranging from quoting to sending larger amounts of value with chunked payments.
+Interledger is a protocol for sending packets of money across different payment networks or ledgers. ILPv4 is a simplification of previous versions of the protocol that is optimized for routing large volumes of low-value packets, also known as "penny switching". ILPv4 can be integrated with any type of ledger, including those not built for interoperability, and it is designed to be used with a variety of higher-level protocols that implement features ranging from quoting to sending larger amounts of value with chunked payments.
 
 ## Overview
 
@@ -41,7 +41,7 @@ Interledger is a protocol for sending packets of money across different payment 
 
 ILPv4 packets may be sent over any communication channel between peers. Account balances are adjusted when accepting and forwarding ILP packets and may be rebalanced using any available means, ranging from ledger transfers triggered by an API, to signed updates to payment channels, or the physical delivery of cash or other goods.
 
-In most cases, ILPv4 will be used with a Transport Layer protocol such as the [Pre-Shared Key V2 (PSKv2)](../0025-pre-shared-key-2/0025-pre-shared-key-2.md) protocol, which handles the generation of ILP conditions and fulfillments. ILPv4 may also be used with higher-level protocols that implement chunking and reassembly of higher-value payments.
+ILPv4 will often be used with a Transport Layer protocol, such as the [STREAM](../0029-stream/0029-stream.md) protocol, which handles the generation of ILP conditions and fulfillments. ILPv4 may also be used with higher-level protocols that implement chunking and reassembly of higher-value payments.
 
 ### Differences from Previous Versions of ILP
 
@@ -94,7 +94,7 @@ In the case of post-funded accounts, senders transfer value to their connector a
 
 ### Packet Format
 
-ILPv4 packets SHOULD be encoded using the ASN.1 Octet Encoding Rules.
+ILPv4 packets MUST be encoded using the ASN.1 Canonical Octet Encoding Rules. Implementations MAY accept packets encoded in a non-canonical form.
 
 #### Type-Length Wrapper
 
@@ -161,7 +161,7 @@ Final errors indicate that the payment is invalid and should not be retried unle
 | **F01** | **Invalid Packet** | The ILP packet was syntactically invalid. | (empty) |
 | **F02** | **Unreachable** | There was no way to forward the payment, because the destination ILP address was wrong or the connector does not have a route to the destination. | (empty) |
 | **F03** | **Invalid Amount** | The amount is invalid, for example it contains more digits of precision than are available on the destination ledger or the amount is greater than the total amount of the given asset in existence. | (empty) |
-| **F04** | **Insufficient Destination Amount** | The receiver deemed the amount insufficient, for example you tried to pay a $100 invoice with $10. | (empty) |
+| **F04** | **Insufficient Destination Amount** | The receiver deemed the amount insufficient, for example, the effective exchange rate was too low. | (empty) |
 | **F05** | **Wrong Condition** | The receiver generated a different condition and cannot fulfill the payment. | (empty) |
 | **F06** | **Unexpected Payment** | The receiver was not expecting a payment like this (the data and destination address don't make sense in that combination, for example if the receiver does not understand the transport protocol used) | (empty) |
 | **F07** | **Cannot Receive** | The receiver (beneficiary) is unable to accept this payment due to a constraint. For example, the payment would put the receiver above its maximum account balance. | (empty) |
@@ -188,7 +188,7 @@ Relative errors indicate that the payment did not have enough of a margin in ter
 
 | Code | Name | Description | Data Fields |
 |---|---|---|---|
-| **R00** | **Transfer Timed Out** | The transfer timed out, meaning the next party in the chain did not respond. This could be because you set your timeout too low or because something look longer than it should. The sender MAY try again with a higher expiry, but they SHOULD NOT do this indefinitely or a malicious connector could cause them to tie up their money for an unreasonably long time. | (empty) |
+| **R00** | **Transfer Timed Out** | The transfer timed out, meaning the next party in the chain did not respond. This could be because you set your timeout too low or because something took longer than it should. The sender MAY try again with a higher expiry, but they SHOULD NOT do this indefinitely or a malicious connector could cause them to tie up their money for an unreasonably long time. | (empty) |
 | **R01** | **Insufficient Source Amount** | The amount received by a connector in the path was too little to forward (zero or less). Either the sender did not send enough money or the exchange rate changed. The sender MAY try again with a higher amount, but they SHOULD NOT do this indefinitely or a malicious connector could steal money from them. | (empty) |
 | **R02** | **Insufficient Timeout** | The connector could not forward the payment, because the timeout was too low to subtract its safety margin. The sender MAY try again with a higher expiry, but they SHOULD NOT do this indefinitely or a malicious connector could cause them to tie up their money for an unreasonably long time. | (empty) |
 | **R99** | **Application Error** | Reserved for application layer protocols. Applications MAY use names other than `Application Error`. | Determined by Application |
